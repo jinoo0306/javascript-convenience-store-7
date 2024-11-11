@@ -15,12 +15,24 @@ class StoreController {
 
     try {
       const input = await InputView.readItem();
-      Validator.validateItemInput(input); // Validator를 사용하여 입력 형식 검증
-      // 올바른 입력이 확인되면 다음 로직으로 이동 (예: 상품 처리 로직)
+      Validator.validateItemInput(input);
+
+      const separatedInput = this.separateInput(input);
+      Validator.validateStock(products, separatedInput);
     } catch (error) {
-      OutputView.printError(error.message); // 오류 메시지 출력
-      this.BuyProduct(); // 재귀 호출로 재입력 요청
+      OutputView.printError(error.message);
+      this.BuyProduct();
     }
+  }
+
+  separateInput(input) {
+    return input
+      .slice(1, -1)
+      .split("],[")
+      .map((item) => {
+        const [name, quantity] = item.split("-");
+        return { name, quantity: parseInt(quantity, 10) };
+      });
   }
 }
 
