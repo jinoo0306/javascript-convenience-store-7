@@ -6,8 +6,11 @@ import Validator from "../utils/Validator.js";
 class StoreController {
   constructor() {
     this.cart = [];
-    this.totalAmount = 0; // 총 구매 금액
-    this.finalAmount = 0; // 프로모션 및 멤버십 할인 적용 후 금액
+    this.giveawayItems = [];
+    this.promotionDiscount = 0;
+    this.membershipDiscount = 0;
+    this.totalAmount = 0;
+    this.finalAmount = 0;
   }
 
   async start() {
@@ -27,29 +30,28 @@ class StoreController {
       Validator.validateStock(products, separatedInput);
 
       for (const { name, quantity } of separatedInput) {
-        const product = products.find((item) => item.name === name);
-        const additionalOffer = product.getPromotionOffer(quantity);
+        const { totalPrice, freeQuantity, discount } = StoreService.addToCart(
+          this.cart,
+          name,
+          quantity
+        );
+        if (freeQuantity > 0)
+          this.giveawayItems.push({ name, quantity: freeQuantity });
 
-        let totalQuantity = quantity;
-        if (additionalOffer > 0) {
-          const response = await InputView.askPromotionOffer(
-            name,
-            additionalOffer
-          );
-          if (response.toLowerCase() === "Y") {
-            totalQuantity += additionalOffer;
-          }
-        }
-
-        this.addToCart(product.name, totalQuantity, product.price);
+        this.promotionDiscount += discount;
       }
 
+      this.totalAmount = StoreService.calculateTotalAmount(); // 총 구매액 저장
+
       const discountMembership = await InputView.askMembership();
-      if (discountMembership === "Y") {
+      if (discountMembership.toLowerCase() === "y") {
         this.applyMembershipDiscount();
       }
 
-      OutputView.printTotalAmount(this.finalAmount); // 최종 결제 금액 출력
+      this.finalAmount =
+        this.totalAmount - this.promotionDiscount - this.membershipDiscount;
+
+      this.printReceipt();
     } catch (error) {
       OutputView.printError(error.message);
       this.BuyProduct();
@@ -66,19 +68,23 @@ class StoreController {
       });
   }
 
-  addToCart(productName, quantity, price) {
-    const existingItem = this.cart.find((item) => item.name === productName);
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
-      this.cart.push({ name: productName, quantity });
-    }
-    this.totalAmount += quantity * price;
+  applyMembershipDiscount() {
+    const nonPromotionalTotal = this.cart
+      .filter((item) => !item.hasPromotion)
+      .reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+    this.membershipDiscount = Math.min(nonPromotionalTotal * 0.3, 8000);
   }
 
-  applyMembershipDiscount() {
-    const discount = Math.min(this.totalAmount * 0.3, 8000);
-    this.finalAmount = this.totalAmount - discount;
+  printReceipt() {
+    OutputView.printReceipt(
+      this.cart,
+      this.giveawayItems,
+      this.promotionDiscount,
+      this.membershipDiscount,
+      this.finalAmount,
+      this.totalAmount
+    );
   }
 }
 

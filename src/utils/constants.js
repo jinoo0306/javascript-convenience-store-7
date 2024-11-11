@@ -18,3 +18,21 @@ export const WELCOME_MESSAGE = {
   GREETING_WSTORE: "안녕하세요. W편의점입니다.",
   PRODUCT_INFO: "현재 보유하고 있는 상품입니다.\n",
 };
+
+export const RECEIPT_FORMAT = {
+  TITLE_STORE: "\n============== W 편의점 ================\n",
+  TITLE_GIVEAWAY: "\n============= 증      정 ============\n",
+  TITLE_PAYMENT: "\n============= 결제 정보 ================\n",
+  END_LABEL: "\n=======================================\n",
+  HEADER: "\n상품명        수량      금액",
+  ITEM_LINE: (name, quantity, price) => `${name}\t${quantity}\t${price}`,
+  GIVEAWAY_LINE: (name, quantity) => `${name}\t${quantity}`,
+  TOTAL_AMOUNT: (price) => `총구매액:   ${price}`,
+  EVENT_DISCOUNT: (price) => `행사할인:  -${price}`,
+  MEMBERSHIP_DISCOUNT: (price) => `멤버십할인:-${price}`,
+  FINAL_AMOUNT: (price) => `내실돈:    ${price}`,
+};
+
+export const MAX_NAME_LENGTH = 15;
+export const MAX_QUANTITY_LENGTH = 5;
+export const MAX_PRICE_LENGTH = 10;

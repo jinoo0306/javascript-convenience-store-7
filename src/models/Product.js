@@ -15,22 +15,25 @@ class Product {
     this.quantity -= amount;
   }
 
-  getPromotionOffer(buyQuantity) {
-    if (!this.promotion) return 0;
+  calculatePromotionOffer(buyQuantity) {
+    if (!this.promotion) return { freeQuantity: 0, discount: 0 };
 
-    const requiredQuantity = this.promotion.buy;
-    const freeQuantity = this.promotion.get;
-    const remainder = buyQuantity % (requiredQuantity + freeQuantity);
-    if (remainder >= requiredQuantity) {
-      return freeQuantity;
-    }
-    return 0;
+    const { buy, get } = this.promotion;
+    const sets = Math.floor(buyQuantity / (buy + get));
+    const freeQuantity = sets * get;
+    const discount = freeQuantity * this.price;
+
+    return { freeQuantity, discount };
+  }
+
+  getTotalPrice(quantity) {
+    return quantity * this.price;
   }
 
   getInfo() {
     let promotionInfo = "";
     if (this.promotion) {
-      promotionInfo = this.promotion.name;
+      promotionInfo = `${this.promotion.name}${this.promotion.buy}+${this.promotion.get}`;
     }
     return `${this.name} ${this.price}원 ${this.quantity}개 ${promotionInfo}`;
   }

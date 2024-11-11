@@ -2,11 +2,15 @@ import fs from "fs";
 import Product from "../models/Product.js";
 
 const StoreService = {
+  products: [],
+  totalAmount: 0,
+
   loadProducts() {
     const productsData = fs.readFileSync("public/products.md", "utf-8");
     const promotionsData = fs.readFileSync("public/promotions.md", "utf-8");
 
-    return this.parseProductData(productsData, promotionsData);
+    this.products = this.parseProductData(productsData, promotionsData);
+    return this.products;
   },
 
   parseProductData(productsData, promotionsData) {
@@ -45,6 +49,31 @@ const StoreService = {
         };
         return acc;
       }, {});
+  },
+
+  addToCart(cart, productName, quantity) {
+    const product = this.products.find((item) => item.name === productName);
+    if (!product) throw new Error(ERROR_MESSAGES.INVALID_FORMAT);
+
+    const { freeQuantity, discount } =
+      product.calculatePromotionOffer(quantity);
+    product.reduceStock(quantity + freeQuantity);
+
+    const totalPrice = product.getTotalPrice(quantity);
+    this.totalAmount += totalPrice;
+
+    cart.push({
+      name: product.name,
+      quantity,
+      price: product.price,
+      hasPromotion: discount > 0,
+    });
+
+    return { totalPrice, freeQuantity, discount };
+  },
+
+  calculateTotalAmount() {
+    return this.totalAmount;
   },
 };
 
