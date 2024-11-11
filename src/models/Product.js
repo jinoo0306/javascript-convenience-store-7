@@ -33,7 +33,7 @@ class Product {
   getInfo() {
     let promotionInfo = "";
     if (this.promotion) {
-      promotionInfo = `${this.promotion.name}${this.promotion.buy}+${this.promotion.get}`;
+      promotionInfo = `${this.promotion.name}`;
     }
     return `${this.name} ${this.price}원 ${this.quantity}개 ${promotionInfo}`;
   }
@@ -43,8 +43,6 @@ class Product {
 
     const requiredQuantity = this.promotion.buy;
     const freeQuantity = this.promotion.get;
-
-    // 프로모션으로 이미 제공된 증정 수량 제외 후 추가 증정 계산
     const eligibleForPromotion =
       buyQuantity % (requiredQuantity + freeQuantity);
     const offerCount =

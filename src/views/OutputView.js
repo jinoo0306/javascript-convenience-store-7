@@ -47,7 +47,7 @@ const OutputView = {
 
     cart.forEach((item) => {
       const name = item.name.padEnd(MAX_NAME_LENGTH);
-      const quantity = String(item.quantity).padStart(MAX_QUANTITY_LENGTH); // 수량을 고정 너비로 채우기
+      const quantity = String(item.quantity).padStart(MAX_QUANTITY_LENGTH);
       const price = (item.price * item.quantity)
         .toLocaleString()
         .padStart(MAX_PRICE_LENGTH);

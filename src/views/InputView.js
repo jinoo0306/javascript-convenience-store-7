@@ -20,6 +20,11 @@ const InputView = {
     const input = await Console.readLineAsync(INPUT_MESSAGES.MEMBERSHIP_CHECK);
     return input;
   },
+
+  async askContinueShopping() {
+    const input = await Console.readLineAsync(INPUT_MESSAGES.CONTINUE_SHOPPING);
+    return input;
+  },
 };
 
 export default InputView;

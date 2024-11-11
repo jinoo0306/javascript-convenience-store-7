@@ -6,31 +6,31 @@ import Validator from "../utils/Validator.js";
 class StoreController {
   constructor() {
     this.cart = [];
-    this.giveawayItems = []; // 증정 상품 내역
-    this.totalAmount = 0; // 총 구매 금액
-    this.promotionDiscount = 0; // 프로모션 할인액
-    this.membershipDiscount = 0; // 멤버십 할인액
-    this.finalAmount = 0; // 최종 결제 금액
+    this.giveawayItems = [];
+    this.totalAmount = 0;
+    this.promotionDiscount = 0;
+    this.membershipDiscount = 0;
+    this.finalAmount = 0;
+    this.products = StoreService.loadProducts();
   }
 
   async start() {
-    this.BuyProduct();
+    await this.BuyProduct();
   }
 
   async BuyProduct() {
     OutputView.printWelcome();
-    const products = StoreService.loadProducts();
-    OutputView.printProduct(products);
+    OutputView.printProduct(this.products);
 
     try {
       const input = await InputView.readItem();
       Validator.validateItemInput(input);
 
       const separatedInput = this.separateInput(input);
-      Validator.validateStock(products, separatedInput);
+      Validator.validateStock(this.products, separatedInput);
 
       for (const { name, quantity } of separatedInput) {
-        const product = products.find((item) => item.name === name);
+        const product = this.products.find((item) => item.name === name);
         const additionalOffer = product.getPromotionOffer(quantity);
 
         let totalQuantity = quantity;
@@ -40,12 +40,13 @@ class StoreController {
             additionalOffer
           );
           if (response.toLowerCase() === "y") {
+            this.giveawayItems.push({ name, quantity: additionalOffer });
+            this.promotionDiscount += additionalOffer * product.price;
             totalQuantity += additionalOffer;
-            this.giveawayItems.push({ name, quantity: additionalOffer }); // 증정 상품 내역에 추가
-            this.promotionDiscount += additionalOffer * product.price; // 행사 할인 금액 누적
           }
         }
 
+        product.reduceStock(totalQuantity);
         this.addToCart(product.name, totalQuantity, product.price);
       }
 
@@ -57,11 +58,17 @@ class StoreController {
       this.finalAmount =
         this.totalAmount - this.promotionDiscount - this.membershipDiscount;
 
-      // 영수증 출력
       this.printReceipt();
+
+      const response = await InputView.askContinueShopping();
+      if (response.toLowerCase() === "y") {
+        await this.BuyProduct();
+      } else {
+        Console.print("프로그램을 종료합니다.");
+      }
     } catch (error) {
       OutputView.printError(error.message);
-      this.BuyProduct();
+      await this.BuyProduct();
     }
   }
 
@@ -86,7 +93,10 @@ class StoreController {
   }
 
   applyMembershipDiscount() {
-    this.membershipDiscount = Math.min(this.totalAmount * 0.3, 8000);
+    this.membershipDiscount = Math.min(
+      (this.totalAmount - this.promotionDiscount) * 0.3,
+      8000
+    );
   }
 
   printReceipt() {
@@ -96,7 +106,7 @@ class StoreController {
       this.promotionDiscount,
       this.membershipDiscount,
       this.finalAmount,
-      this.totalAmount // 총 구매 금액
+      this.totalAmount
     );
   }
 }
