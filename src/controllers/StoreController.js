@@ -19,12 +19,25 @@ class StoreController {
 
       const separatedInput = this.separateInput(input);
       Validator.validateStock(products, separatedInput);
+
+      for (const { name, quantity } of separatedInput) {
+        const product = products.find((item) => item.name === name);
+        const additionalOffer = product.getPromotionOffer(quantity);
+
+        if (additionalOffer > 0) {
+          const response = await InputView.askPromotionOffer(
+            name,
+            additionalOffer
+          );
+          if (response === "Y") {
+            console.log("추가!");
+          }
+        }
+      }
     } catch (error) {
       OutputView.printError(error.message);
-      this.BuyProduct();
     }
   }
-
   separateInput(input) {
     return input
       .slice(1, -1)

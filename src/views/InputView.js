@@ -8,6 +8,13 @@ const InputView = {
     );
     return input;
   },
+
+  async askPromotionOffer(productName, additionalQuantity) {
+    const input = await Console.readLineAsync(
+      INPUT_MESSAGES.PROMOTION_OFFER(productName, additionalQuantity)
+    );
+    return input;
+  },
 };
 
 export default InputView;
