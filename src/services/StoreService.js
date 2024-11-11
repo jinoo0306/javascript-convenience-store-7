@@ -1,46 +1,39 @@
 import fs from "fs";
+import Product from "../models/Product.js";
 
 const StoreService = {
   loadProducts() {
     const productsData = fs.readFileSync("public/products.md", "utf-8");
     const promotionsData = fs.readFileSync("public/promotions.md", "utf-8");
 
-    const products = this.parseProductData(productsData, promotionsData);
-    return products;
+    return this.parseProductData(productsData, promotionsData);
   },
 
   parseProductData(productsData, promotionsData) {
     const promotions = this.parsePromotions(promotionsData);
 
-    const products = productsData
+    return productsData
       .trim()
       .split("\n")
       .slice(1)
       .map((line) => {
         const [name, price, quantity, promotion] = line.split(",");
-        let promotionInfo = "";
+        const promotionInfo = promotions[promotion] || null;
 
-        if (promotion && promotions[promotion] && !promotionInfo) {
-          const promo = promotions[promotion];
-          promotionInfo = `${promo.name}`;
-        }
-
-        return {
+        return new Product(
           name,
-          price: parseInt(price, 10),
-          quantity: parseInt(quantity, 10),
-          promotion: promotionInfo,
-        };
+          parseInt(price, 10),
+          parseInt(quantity, 10),
+          promotionInfo
+        );
       });
-
-    return products;
   },
 
   parsePromotions(promotionsData) {
-    const promotions = promotionsData
+    return promotionsData
       .trim()
       .split("\n")
-      .slice(1) // 첫 줄은 헤더이므로 제외
+      .slice(1)
       .reduce((acc, line) => {
         const [name, buy, get, startDate, endDate] = line.split(",");
         acc[name] = {
@@ -52,8 +45,6 @@ const StoreService = {
         };
         return acc;
       }, {});
-
-    return promotions;
   },
 };
 
