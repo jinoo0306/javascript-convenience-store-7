@@ -37,6 +37,21 @@ class Product {
     }
     return `${this.name} ${this.price}원 ${this.quantity}개 ${promotionInfo}`;
   }
+
+  getPromotionOffer(buyQuantity) {
+    if (!this.promotion) return 0;
+
+    const requiredQuantity = this.promotion.buy;
+    const freeQuantity = this.promotion.get;
+
+    // 프로모션으로 이미 제공된 증정 수량 제외 후 추가 증정 계산
+    const eligibleForPromotion =
+      buyQuantity % (requiredQuantity + freeQuantity);
+    const offerCount =
+      eligibleForPromotion >= requiredQuantity ? freeQuantity : 0;
+
+    return offerCount;
+  }
 }
 
 export default Product;

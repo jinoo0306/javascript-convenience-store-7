@@ -6,11 +6,11 @@ import Validator from "../utils/Validator.js";
 class StoreController {
   constructor() {
     this.cart = [];
-    this.giveawayItems = [];
-    this.promotionDiscount = 0;
-    this.membershipDiscount = 0;
-    this.totalAmount = 0;
-    this.finalAmount = 0;
+    this.giveawayItems = []; // 증정 상품 내역
+    this.totalAmount = 0; // 총 구매 금액
+    this.promotionDiscount = 0; // 프로모션 할인액
+    this.membershipDiscount = 0; // 멤버십 할인액
+    this.finalAmount = 0; // 최종 결제 금액
   }
 
   async start() {
@@ -30,18 +30,24 @@ class StoreController {
       Validator.validateStock(products, separatedInput);
 
       for (const { name, quantity } of separatedInput) {
-        const { totalPrice, freeQuantity, discount } = StoreService.addToCart(
-          this.cart,
-          name,
-          quantity
-        );
-        if (freeQuantity > 0)
-          this.giveawayItems.push({ name, quantity: freeQuantity });
+        const product = products.find((item) => item.name === name);
+        const additionalOffer = product.getPromotionOffer(quantity);
 
-        this.promotionDiscount += discount;
+        let totalQuantity = quantity;
+        if (additionalOffer > 0) {
+          const response = await InputView.askPromotionOffer(
+            name,
+            additionalOffer
+          );
+          if (response.toLowerCase() === "y") {
+            totalQuantity += additionalOffer;
+            this.giveawayItems.push({ name, quantity: additionalOffer }); // 증정 상품 내역에 추가
+            this.promotionDiscount += additionalOffer * product.price; // 행사 할인 금액 누적
+          }
+        }
+
+        this.addToCart(product.name, totalQuantity, product.price);
       }
-
-      this.totalAmount = StoreService.calculateTotalAmount(); // 총 구매액 저장
 
       const discountMembership = await InputView.askMembership();
       if (discountMembership.toLowerCase() === "y") {
@@ -51,6 +57,7 @@ class StoreController {
       this.finalAmount =
         this.totalAmount - this.promotionDiscount - this.membershipDiscount;
 
+      // 영수증 출력
       this.printReceipt();
     } catch (error) {
       OutputView.printError(error.message);
@@ -68,12 +75,18 @@ class StoreController {
       });
   }
 
-  applyMembershipDiscount() {
-    const nonPromotionalTotal = this.cart
-      .filter((item) => !item.hasPromotion)
-      .reduce((acc, item) => acc + item.price * item.quantity, 0);
+  addToCart(productName, quantity, price) {
+    const existingItem = this.cart.find((item) => item.name === productName);
+    if (existingItem) {
+      existingItem.quantity += quantity;
+    } else {
+      this.cart.push({ name: productName, quantity, price });
+    }
+    this.totalAmount += quantity * price;
+  }
 
-    this.membershipDiscount = Math.min(nonPromotionalTotal * 0.3, 8000);
+  applyMembershipDiscount() {
+    this.membershipDiscount = Math.min(this.totalAmount * 0.3, 8000);
   }
 
   printReceipt() {
@@ -83,7 +96,7 @@ class StoreController {
       this.promotionDiscount,
       this.membershipDiscount,
       this.finalAmount,
-      this.totalAmount
+      this.totalAmount // 총 구매 금액
     );
   }
 }
