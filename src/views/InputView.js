@@ -15,6 +15,11 @@ const InputView = {
     );
     return input;
   },
+
+  async askMembership() {
+    const input = await Console.readLineAsync(INPUT_MESSAGES.MEMBERSHIP_CHECK);
+    return input;
+  },
 };
 
 export default InputView;

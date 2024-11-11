@@ -16,6 +16,14 @@ const OutputView = {
       Console.print(`- ${product.getInfo()}`); // Product의 getInfo 메서드를 호출하여 출력
     });
   },
+
+  printTotalAmount(amount) {
+    Console.print(`최종 결제 금액: ${amount}원`);
+  },
+
+  printError(message) {
+    Console.print(message);
+  },
 };
 
 export default OutputView;
