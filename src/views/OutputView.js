@@ -13,11 +13,7 @@ const OutputView = {
 
   printProduct(products) {
     products.forEach((product) => {
-      const stockInfo =
-        product.quantity > 0 ? `${product.quantity}개` : "재고 없음";
-      Console.print(
-        `- ${product.name} ${product.price}원 ${stockInfo} ${product.promotion}`.trim()
-      );
+      Console.print(`- ${product.getInfo()}`); // Product의 getInfo 메서드를 호출하여 출력
     });
   },
 };
